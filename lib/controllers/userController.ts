@@ -4,7 +4,6 @@ import bcrypt from "bcrypt"
 import IUser from "../modules/users/IUser"
 import APIResponse from "../modules/common/services"
 import UserService from "../modules/users/service";
-import {ModificationNote} from "../modules/common/model"
 
 export default class UserController{
 
@@ -33,13 +32,24 @@ export default class UserController{
                        modification_note: 'New user created'
                    }]
                };
-               
-               new UserService().createUser(user, (error: any, user_res:IUser)=>{
-                   delete user_res.password;
-                   delete user_res.is_deleted;
-                   if(error) new APIResponse().serverError("MongoDB isn't creating user data", error, res);
-                   else new APIResponse().successMessage("create user successfull", user_res, res);
-               })
+
+               new UserService().filterUser({email:req.body.email}, (error: any, filterRes:IUser)=>{
+                if(error) new APIResponse().serverError("MongoDB isn't creating user data", error, res);
+                else if(filterRes) new APIResponse().successMessage("This User already created in our system", null, res)
+                else{
+                    new UserService().createUser(user, (error: any, user_res:IUser)=>{
+
+                       
+                        if(error) new APIResponse().serverError("MongoDB isn't creating user data", error, res);
+                        else{
+                            delete user_res['password'];
+                            delete user_res['is_deleted'];
+                            new APIResponse().successMessage("create user successfull", user_res, res);
+                        } 
+                    })
+                }
+              })
+
 
            }else{
              new APIResponse().insufficientParameters(res);
