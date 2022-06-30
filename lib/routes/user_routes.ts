@@ -18,10 +18,10 @@ export default class UserRoutes {
         app.put('/api/user/:id', (req: Request, res: Response) => {
             this.user_controller.updateUser(req, res);
         });
-
-        // app.delete('/api/user/:id', (req: Request, res: Response) => {
-        //     this.user_controller.delete_user(req, res);
-        // });
+        
+        app.delete('/api/user/:id', (req: Request, res: Response) => {
+            this.user_controller.deleteUser(req, res);
+        });
 
     }
 }
