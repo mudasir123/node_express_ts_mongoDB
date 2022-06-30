@@ -8,6 +8,7 @@ export default interface IUser {
         last_name: String;
     };
     email: String;
+    password?:String;
     phone_number: String;
     gender: String;
     is_deleted?: Boolean;

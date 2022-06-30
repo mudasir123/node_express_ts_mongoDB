@@ -1,6 +1,6 @@
 
 import { Request, Response } from "express"
-
+import bcrypt from "bcrypt"
 import IUser from "../modules/users/IUser"
 import APIResponse from "../modules/common/services"
 import UserService from "../modules/users/service";
@@ -11,11 +11,12 @@ export default class UserController{
     /**
      * createUSer
      */
-    public createUser(req:Request, res:Response):void {
+    public async createUser(req:Request, res:Response):Promise<void> {
         try{
            if(req.body.name && req.body.name.first_name && req.body.name.middle_name &&
-             req.body.name.last_name && req.body.email && req.body.phone_number && req.body.gender){
+             req.body.name.last_name && req.body.email && req.body.password && req.body.phone_number && req.body.gender){
 
+               const hashPassword =  await bcrypt.hash(req.body.password, 8);
                const user: IUser = {
                    name: {
                        first_name: req.body.name.first_name,
@@ -23,6 +24,7 @@ export default class UserController{
                        last_name: req.body.name.last_name
                    },
                    email: req.body.email,
+                   password:hashPassword,
                    phone_number: req.body.phone_number,
                    gender: req.body.gender,
                    modification_notes: [{
@@ -33,7 +35,8 @@ export default class UserController{
                };
                
                new UserService().createUser(user, (error: any, user_res:IUser)=>{
-   
+                   delete user_res.password;
+                   delete user_res.is_deleted;
                    if(error) new APIResponse().serverError("MongoDB isn't creating user data", error, res);
                    else new APIResponse().successMessage("create user successfull", user_res, res);
                })

@@ -12,6 +12,7 @@ const schema = new Schema({
         }
     },
     email: String,
+    password:String,
     phone_number: String,
     gender: String,
     is_deleted: {
