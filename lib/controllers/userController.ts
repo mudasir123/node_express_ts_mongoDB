@@ -54,9 +54,14 @@ export default class UserController{
         try {
            
             if(req.params.id){
-                const filterParam = {_id:req.params.id, is_deleted:false};
+                const filterParam = {_id:req.params.id};
                 new UserService().filterUser(filterParam, (error:any, user_res:IUser)=>{
                     if(error) new APIResponse().serverError("MongoDB isn't returning user data", error, res);
+                    else if(user_res.is_deleted){
+                        const username = `${user_res.name.first_name} ${user_res.name.middle_name} ${user_res.name.last_name}`
+                        const message = `The user ${username} was deleted!`
+                        new APIResponse().successMessage(message, null, res);
+                    }
                     else new APIResponse().successMessage("Get User Data Successfully", user_res, res);
                 })
 
