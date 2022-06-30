@@ -54,8 +54,8 @@ export default class UserController{
         try {
            
             if(req.params.id){
-                const userId = {_id:req.params.id};
-                new UserService().filterUser(userId, (error:any, user_res:IUser)=>{
+                const filterParam = {_id:req.params.id, is_deleted:false};
+                new UserService().filterUser(filterParam, (error:any, user_res:IUser)=>{
                     if(error) new APIResponse().serverError("MongoDB isn't returning user data", error, res);
                     else new APIResponse().successMessage("Get User Data Successfully", user_res, res);
                 })
@@ -79,7 +79,7 @@ export default class UserController{
 
         if ( req.params.id && isUserDataforUpdate ) {
 
-            const userId = { _id: req.params.id };
+            const userId = { _id: req.params.id, is_deleted:false };
 
             new UserService().filterUser(userId, (error: any, userData: IUser) => {
 
@@ -115,9 +115,45 @@ export default class UserController{
                     new APIResponse().successMessage("Invalid User", null, res)
                 }
             });
-            
+
         } else {
              new APIResponse().insufficientParameters(res);
+        }
+    }
+
+    /**
+     * deleteUser
+     */
+    public deleteUser(req: Request, res: Response) {
+        if (req.params.id) {
+            
+            const userFilter = {_id:req.params.id};
+            new UserService().filterUser(userFilter, (error: any, userData:IUser)=>{
+
+                if(error) new APIResponse().serverError("MongoDB isn't returning user data", error, res);
+                else if(userData){
+                    if(userData.is_deleted){
+                        const username = `${userData.name.first_name} ${userData.name.middle_name} ${userData.name.last_name}`
+                        const message = `The user ${username} already deleted!`
+                        new APIResponse().successMessage(message, null, res);
+                    }else{
+                        userData.modification_notes.push({
+                            modified_on: new Date(Date.now()),
+                            modified_by: `${userData.name.first_name} ${userData.name.middle_name} ${userData.name.last_name}`,
+                            modification_note: 'Admin marked user as deleted: User is not permently Deleted from our system'
+                        });
+                        userData.is_deleted = true;
+                        new UserService().updateUser(userData, (error: any, resData:any)=>{
+                            if(error) new APIResponse().serverError("MongoDB isn't returning user data", error, res);
+                            else new APIResponse().successMessage("User Deleted Successfully", null, res);
+                        })
+                    }
+                }
+
+            })
+        
+        } else {
+            new APIResponse().insufficientParameters(res);
         }
     }
 }
